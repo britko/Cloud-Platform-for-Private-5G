@@ -1,4 +1,4 @@
-# Cloud_Kubernetes (Comento Bootcamp 2021.09~10)
+# Cloud Platform for Private 5G (Comento Bootcamp 2021.09~10)
 
 ## 🎁Tech
 - VBOX
