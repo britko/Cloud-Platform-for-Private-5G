@@ -1,0 +1,157 @@
+프로메테우스 설치
+
+# https://prometheus.io/
+
+# 유저 추가
+useradd -m -s /bin/bash prometheus
+su - prometheus
+
+# 다운로드
+cd /home/prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.28.0/prometheus-2.28.0.linux-amd64.tar.gz
+tar -xzvf prometheus-2.28.0.linux-amd64.tar.gz
+
+# 폴더명 변경 로그아웃
+mv prometheus-2.28.0.linux-amd64/ prometheus
+exit
+
+# 시스템 서비스 등록
+vi /etc/systemd/system/prometheus.service
+
+[Unit]
+Description=Prometheus Server
+Documentation=https://prometheus.io/docs/introduction/overview/
+After=network-online.target
+
+[Service]
+User=prometheus
+Restart=on-failure
+ExecStart=/home/prometheus/prometheus/prometheus \
+  --config.file=/home/prometheus/prometheus/prometheus.yml \
+  --storage.tsdb.path=/home/prometheus/prometheus/data
+
+[Install]
+WantedBy=multi-user.target
+
+# 서비스 
+systemctl daemon-reload
+systemctl start prometheus
+systemctl status prometheus
+systemctl enable prometheus
+
+# 확인
+curl -X GET http://localhost:9090
+<a href="/graph">Found</a>.
+
+# 테스트에서만! 
+firewall-cmd --permanent --zone=public --add-port=9090/tcp
+firewall-cmd --reload
+
+# Cloud 환경에서는 보안그룹을 추가하자!!
+
+Prometheus는 TCP 9090 포트로 서비스되므로 외부(Grafana 서버)에서 데이터 소스로 연결시 방화벽 개방이 필요하다.
+
+Node Exporter는 TCP 9100 포트로 서비스되므로 외부(Prometheus 중앙 서버)에서 시계열 데이터 수집시 방화벽 개방이 필요하다.
+
+
+Node Exporter 설치
+
+# 유저 추가
+useradd -m -s /bin/bash prometheus
+su - prometheus
+
+# 다운로드
+cd /home/prometheus
+wget https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz
+tar -xzvf node_exporter-1.1.2.linux-amd64.tar.gz
+
+# 폴더명 변경 로그아웃
+mv node_exporter-1.1.2.linux-amd64/ node_exporter
+exit
+
+# 서비스 작성
+sudo su
+vi /etc/systemd/system/node_exporter.service
+
+[Unit]
+Description=Prometheus Node Exporter
+Documentation=https://prometheus.io/docs/guides/node-exporter/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Restart=on-failure
+ExecStart=/home/prometheus/node_exporter/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+# 서비스
+systemctl daemon-reload
+systemctl start node_exporter
+systemctl status node_exporter
+systemctl enable node_exporter
+
+# 테스트에서만! 운영시 ip 허용
+firewall-cmd --permanent --zone=public --add-port=9100/tcp
+firewall-cmd --reload
+
+# 클라우드는 보안그룹 추가!
+
+# 확인
+curl -X GET http://localhost:9100/metrics
+
+Prometheus 와 Node exporter 연동
+
+cd /home/prometheus/prometheus
+
+vi prometheus.yml 
+
+
+# scrape_configs: 밑에 아래 추가
+- job_name: 'test-node-1'
+  static_configs:
+  - targets: ['192.168.10.7:9100']
+
+systemctl restart prometheus
+systemctl status prometheus
+
+Grafana 연동
+https://grafana.com/grafana/download
+
+# 설치
+(CentOS)
+yum install initscripts urw-fonts wget
+wget [https://dl.grafana.com/oss/release/grafana-7.5.3-1.x86\_64.rpm](https://dl.grafana.com/oss/release/grafana-7.5.3-1.x86_64.rpm)
+yum install grafana-7.5.3-1.x86_64.rpm
+
+(Ubuntu)
+apt install -y adduser libfontconfig1
+wget https://dl.grafana.com/oss/release/grafana_8.0.3_amd64.deb
+sudo dpkg -i grafana_8.0.3_amd64.deb
+
+
+# 테스트에서만! 
+firewall-cmd --permanent --zone=public --add-port=3000/tcp
+firewall-cmd --reload
+
+# 클라우드에서는 보안그룹 추가!!
+
+systemctl daemon-reload
+systemctl start grafana-server
+systemctl status grafana-server
+systemctl enable grafana-server
+
+By default, Grafana will be listening on http://localhost:3000.
+The default login is "admin" / "admin".
+
+https://prometheus.io/docs/visualization/grafana/
+
+
+1. Click on the "cogwheel" in the sidebar to open the Configuration menu.
+2. Click on "Data Sources".
+3. Click on "Add data source".
+4. Select "Prometheus" as the type.
+5. Set the appropriate Prometheus server URL (for example, http://localhost:9090/)
+6. Adjust other data source settings as desired (for example, choosing the right Access method).
+7. Click "Save & Test" to save the new data source.

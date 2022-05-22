@@ -1,0 +1,14 @@
+{
+  "name": "node-web-app",
+  "version": "1.0.0",
+  "description": "simple node web app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app"
+  },
+  "author": "britko",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
