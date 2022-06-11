@@ -55,7 +55,7 @@ git clone https://github.com/britko/Cloud_Kubernetes.git
 
 
 
-- [deploy `calico` CNI](https://docs.projectcalico.org/getting-started/kubernetes/self-managed-onprem/onpremises){:target='_blank'}
+- [deploy `calico` CNI](https://docs.projectcalico.org/getting-started/kubernetes/self-managed-onprem/onpremises){: target="_blank"}
 
   ```bash
   ## download calico deployment file
